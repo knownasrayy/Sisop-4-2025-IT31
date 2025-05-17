@@ -1,1 +1,20 @@
+version: '3.8'
+
+services:
+  antink-server:
+	build:
+  	context: .
+  	dockerfile: Dockerfile
+	container_name: soal_3-antink-server
+	privileged: true
+	cap_add:
+  	- SYS_ADMIN
+	devices:
+  	- /dev/fuse
+	security_opt:
+  	- apparmor:unconfined
+	volumes:
+  	- /home/knownasrayy/Sisop/Modul-4/soal_3/antink_mount:/source
+  	- /home/knownasrayy/Sisop/Modul-4/soal_3/logs:/logs
+	command: sleep infinity
 
