@@ -91,8 +91,8 @@ Buatlah sebuah virtual filesystem menggunakan FUSE yang memunculkan file Baymax.
 ---
 
 ###
-bash 
-```
+
+```bash
 #define FUSE_USE_VERSION 29
 #include <fuse.h>
 #include <stdio.h>
