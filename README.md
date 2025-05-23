@@ -5,7 +5,7 @@
 - S. Farhan Baig_5027241097
 
 
-# Soal 1_
+# Soal 1
 
 ## Deskripsi Soal
 Shorekeeper menemukan teks hexadecimal anomali di Tethys' Deep. Tugas:
@@ -47,21 +47,55 @@ anomali/
 **Tujuan**
 Mengubah string hexadecimal dalam file `.txt` menjadi file gambar.
 
-Script Awal `(hex_to_image.sh)`:
+Inti Program (`hexed.c`):
 ```bash
-#!/bin/bash
-INPUT="anomali/1.txt"
-OUTPUT="image/output.png"
-HEXDATA=$(cat $INPUT | tr -d ' \n\r')
-echo $HEXDATA | xxd -r -p > $OUTPUT
-echo "File gambar berhasil dibuat di $OUTPUT"
+unsigned char hex_to_byte(const char *hex) {
+    unsigned char byte = 0;
+    for (int i = 0; i < 2; i++) {
+        byte <<= 4;
+        if (hex[i] >= '0' && hex[i] <= '9') {
+            byte |= hex[i] - '0';
+        } else if (hex[i] >= 'a' && hex[i] <= 'f') {
+            byte |= hex[i] - 'a' + 10;
+        } else if (hex[i] >= 'A' && hex[i] <= 'F') {
+            byte |= hex[i] - 'A' + 10;
+        }
+    }
+    return byte;
+}
 ```
+**Penjelasan Proses**:
+1. Baca File Hex:
+```bash
+FILE *input = fopen(input_path, "r");
+fread(hex_data, 1, file_size, input);
+```
+- Membaca seluruh isi file `.txt` ke dalam string `hex_data`.
+2. Bersihkan Whitespace:
+```bash
+for (long j = 0; j < file_size; j++) {
+    if (hex_data[j] != ' ' && hex_data[j] != '\n' && hex_data[j] != '\r') {
+        clean_hex[clean_len++] = hex_data[j];
+    }
+}
+```
+- Menghapus spasi, newline (`\n`), dan carriage return (`\r`).
 
-**Cara Jalankan**
+3. Konversi Hex ke Binary:
 ```bash
-chmod +x hex_to_image.sh
-./hex_to_image.sh
+for (int j = 0; j < clean_len; j += 2) {
+    bin_data[j/2] = hex_to_byte(&clean_hex[j]);
+}
 ```
+- Setiap 2 karakter hex (misal: `"FF"`) diubah ke 1 byte (misal: `0xFF`).
+
+4. Tulis ke File Gambar:
+```bash
+FILE *output = fopen(output_path, "wb");
+fwrite(bin_data, 1, clean_len / 2, output);
+```
+- Data binary langsung ditulis sebagai file PNG/JPEG.
+
 
 ### 1c: Penamaan File dengan Timestamp
 **Tujuan**
