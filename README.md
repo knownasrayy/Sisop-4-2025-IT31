@@ -90,7 +90,7 @@ Buatlah sebuah virtual filesystem menggunakan FUSE yang memunculkan file Baymax.
 
 ---
 
-### Kode
+### Kode Lengkap
 
 ```bash
 #define FUSE_USE_VERSION 29
