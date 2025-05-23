@@ -44,7 +44,8 @@ anomali/
 ```
 
 ### 1b: Konversi Hex ke Gambar
-**Tujuan**
+**Tujuan**:
+
 Mengubah string hexadecimal dalam file `.txt` menjadi file gambar.
 
 Inti Program (`hexed.c`):
