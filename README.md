@@ -758,7 +758,7 @@ static int baymax_read(const char *path, char *buf, size_t size,
 }
 
 ```
-Baymax_read() baca fragmen satu per satu sesuai offset dan ukuran baca, gabungkan hasilnya jadi satu kesatuan.
+- Baymax_read() baca fragmen satu per satu sesuai offset dan ukuran baca, gabungkan hasilnya jadi satu kesatuan.
 
 #### C. Membuat file baru otomatis pecah ke fragmen 1KB di relics
 ```bash
