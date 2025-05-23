@@ -714,5 +714,123 @@ static int baymax_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 -Fungsi baymax_readdir() menampilkan nama base file dari fragmen agar user lihat file utuh.
 
+#### B. File di mount point terlihat utuh walau aslinya pecahan
+```bash
+static int baymax_read(const char *path, char *buf, size_t size,
+                      off_t offset, struct fuse_file_info *fi) {
+    (void)fi;
+    const char *base_filename = path + 1;
+
+    size_t total_bytes_read = 0;
+    int current_fragment_idx = offset / CHUNK_SIZE;
+    off_t offset_in_fragment = offset % CHUNK_SIZE;
+    char fragment_path[PATH_MAX];
+
+    while (total_bytes_read < size && current_fragment_idx < MAX_FRAGMENTS) {
+        snprintf(fragment_path, sizeof(fragment_path), "%s/%s.%03d",
+                 relics_dir, base_filename, current_fragment_idx);
+
+        int fd = open(fragment_path, O_RDONLY);
+        if (fd < 0) {
+            if (errno == ENOENT) break;
+            return -errno;
+        }
+
+        if (flock(fd, LOCK_SH) == -1) {
+            close(fd); return -errno;
+        }
+
+        size_t bytes_to_read = CHUNK_SIZE - offset_in_fragment;
+        if (bytes_to_read > size - total_bytes_read) bytes_to_read = size - total_bytes_read;
+
+        ssize_t bytes_read = pread(fd, buf + total_bytes_read, bytes_to_read, offset_in_fragment);
+
+        flock(fd, LOCK_UN);
+        close(fd);
+
+        if (bytes_read < 0) return -errno;
+        if (bytes_read == 0) break;
+
+        total_bytes_read += bytes_read;
+        offset_in_fragment = 0;
+        current_fragment_idx++;
+    }
+    return total_bytes_read;
+}
+
+```
+Baymax_read() baca fragmen satu per satu sesuai offset dan ukuran baca, gabungkan hasilnya jadi satu kesatuan.
+
+#### C. Membuat file baru otomatis pecah ke fragmen 1KB di relics
+```bash
+static int baymax_create(const char *path, mode_t mode, struct fuse_file_info *fi) {
+    (void)mode;
+    const char *base_filename = path + 1;
+
+    remove_base_fragments(base_filename);
+
+    tracked_file_ctx *ctx = calloc(1, sizeof(tracked_file_ctx));
+    if (!ctx) return -ENOMEM;
+
+    ctx->name = strdup(base_filename);
+    if (!ctx->name) {
+        free(ctx);
+        return -ENOMEM;
+    }
+    ctx->was_written = 0;
+    ctx->max_fragment_idx_written = -1;
+
+    fi->fh = (uintptr_t)ctx;
+    return 0;
+}
+
+static int baymax_write(const char *path, const char *buf, size_t size,
+                       off_t offset, struct fuse_file_info *fi) {
+    (void)path;
+    tracked_file_ctx *ctx = (tracked_file_ctx*)fi->fh;
+    if (!ctx) return -EIO;
+
+    size_t total_bytes_written = 0;
+    int current_fragment_idx = offset / CHUNK_SIZE;
+    off_t offset_in_fragment = offset % CHUNK_SIZE;
+    char fragment_path[PATH_MAX];
+
+    ctx->was_written = 1;
+
+    while (total_bytes_written < size && current_fragment_idx < MAX_FRAGMENTS) {
+        snprintf(fragment_path, sizeof(fragment_path), "%s/%s.%03d",
+                 relics_dir, ctx->name, current_fragment_idx);
+
+        int fd = open(fragment_path, O_WRONLY | O_CREAT, 0644);
+        if (fd < 0) return -errno;
+
+        if (flock(fd, LOCK_EX) == -1) {
+            close(fd); return -errno;
+        }
+
+        size_t bytes_to_write = CHUNK_SIZE - offset_in_fragment;
+        if (bytes_to_write > size - total_bytes_written) bytes_to_write = size - total_bytes_written;
+
+        ssize_t bytes_written = pwrite(fd, buf + total_bytes_written, bytes_to_write, offset_in_fragment);
+
+        flock(fd, LOCK_UN);
+        close(fd);
+
+        if (bytes_written < 0) return -errno;
+        if ((size_t)bytes_written != bytes_to_write) return -EIO;
+
+        total_bytes_written += bytes_written;
+        if (current_fragment_idx > ctx->max_fragment_idx_written) ctx->max_fragment_idx_written = current_fragment_idx;
+
+        offset_in_fragment = 0;
+        current_fragment_idx++;
+    }
+    return total_bytes_written;
+}
+
+```
+- baymax_create() dan baymax_open() siapkan context dan hapus fragmen lama.
+- baymax_write() tulis data pecahan 1024 byte ke fragmen di folder relics.
+
 
 
