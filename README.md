@@ -21,17 +21,18 @@ Shorekeeper menemukan teks hexadecimal anomali di Tethys' Deep. Tugas:
 Mengambil file ZIP dari sumber, mengekstrak ke direktori `anomali`, dan menghapus file ZIP.
 
 **Langkah**:
+1. # Salin file ZIP ke direktori kerja
 ```bash
-# Salin file ZIP ke direktori kerja
 cp '/path/anomali.zip' ~/blackshores/
-
-# Unzip dan hapus file
+```
+2. # Unzip dan hapus file
+```bash
 unzip anomali.zip -d anomali
 rm anomali.zip
 ```
 
 Struktur Hasil:
-`
+```
 anomali/
 ├── 1.txt
 ├── 2.txt
@@ -40,4 +41,4 @@ anomali/
 ├── 5.txt
 ├── 6.txt
 └── 7.txt
-`
+```
