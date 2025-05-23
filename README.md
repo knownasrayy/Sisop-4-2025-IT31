@@ -639,6 +639,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+
 ### Penjelasan Kode
 
 #### A. Sistem file virtual FUSE menampilkan file utuh dari fragment di folder relics
@@ -921,5 +922,31 @@ static int baymax_unlink(const char *path) {
 ```
 - Baymax_unlink() hapus semua file fragmen berurutan dari folder relics dengan nama [filename].000, [filename].001, dst.
 
+#### E. Mencatat aktivitas ke file activity.log (READ, WRITE, DELETE)
+```bash
+static void log_event(const char *event_type, const char *details) {
+    pthread_mutex_lock(&log_mutex);
+    if (!log_fp) {
+        init_logging_internal();
+        if (!log_fp) {
+            pthread_mutex_unlock(&log_mutex);
+            return;
+        }
+    }
 
+    time_t now = time(NULL);
+    struct tm *tm_info = localtime(&now);
+    char timestamp[20];
+    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", tm_info);
 
+    if (details) {
+        fprintf(log_fp, "[%s] %s: %s\n", timestamp, event_type, details);
+    } else {
+        fprintf(log_fp, "[%s] %s\n", timestamp, event_type);
+    }
+    pthread_mutex_unlock(&log_mutex);
+}
+
+```
+- log_event() menulis log event dengan timestamp ke file activity.log.
+Di fungsi seperti baymax_open(), baymax_release(), dan baymax_unlink() dipanggil log_event() sesuai event.
