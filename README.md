@@ -831,5 +831,61 @@ static int baymax_write(const char *path, const char *buf, size_t size,
 - baymax_create() dan baymax_open() siapkan context dan hapus fragmen lama.
 - baymax_write() tulis data pecahan 1024 byte ke fragmen di folder relics.
 
+#### D. Menghapus file di mount point juga menghapus semua fragmen di relics
+```bash
+static int baymax_unlink(const char *path) {
+    const char *base_filename = path + 1;
+    int fragments_unlinked_count = 0;
+    char fragment_path[PATH_MAX];
+    char first_frag_name_for_log[NAME_MAX + 5] = "";
+    char last_frag_name_for_log[NAME_MAX + 5] = "";
+
+    for (int i = 0; i < MAX_FRAGMENTS; i++) {
+        snprintf(fragment_path, sizeof(fragment_path), "%s/%s.%03d",
+                 relics_dir, base_filename, i);
+
+        struct stat st_frag_check;
+        if (stat(fragment_path, &st_frag_check) == -1) {
+            if (errno == ENOENT) break;
+            return -errno;
+        }
+
+        int fd = open(fragment_path, O_WRONLY);
+        if (fd >= 0) {
+            if (flock(fd, LOCK_EX) == -1) {
+                close(fd);
+                return -errno;
+            }
+
+            if (unlink(fragment_path) == 0) {
+                if (fragments_unlinked_count == 0) {
+                    snprintf(first_frag_name_for_log, sizeof(first_frag_name_for_log), "%s.%03d", base_filename, i);
+                }
+                snprintf(last_frag_name_for_log, sizeof(last_frag_name_for_log), "%s.%03d", base_filename, i);
+                fragments_unlinked_count++;
+            }
+            close(fd);
+        } else {
+            if (errno == ENOENT) continue;
+            return -errno;
+        }
+    }
+
+    if (fragments_unlinked_count == 0) return -ENOENT;
+
+    char log_details[NAME_MAX * 2 + 20];
+    if (fragments_unlinked_count == 1) {
+        snprintf(log_details, sizeof(log_details), "%s", first_frag_name_for_log);
+    } else {
+        snprintf(log_details, sizeof(log_details), "%s - %s", first_frag_name_for_log, last_frag_name_for_log);
+    }
+    log_event("DELETE", log_details);
+
+    return 0;
+}
+
+```
+- baymax_unlink() hapus semua file fragmen berurutan dari folder relics dengan nama [filename].000, [filename].001, dst.
+
 
 
