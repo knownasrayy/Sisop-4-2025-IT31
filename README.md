@@ -165,8 +165,7 @@ Berhasil mengonversi anomali/7.txt → image/7_image_2025-05-22_10-40-27.png
 ### Validasi
 1. Cek gambar
 ```bash                                                                                                                 
-┌──(farhanbaig㉿farhan)-[~/blackshores]
-└─$ file image/1_image_2025-05-22_10-40-27.png
+file image/1_image_2025-05-22_10-40-27.png
 ```
 
 2. Cek log
