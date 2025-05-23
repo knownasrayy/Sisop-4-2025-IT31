@@ -234,6 +234,13 @@ static int baymax_getattr(const char *path, struct stat *stbuf) {
     memset(stbuf, 0, sizeof(struct stat));
 
     if (strcmp(path, "/") == 0) {
+Use Control + Shift + m to toggle the tab key moving focus. Alternatively, use esc then tab to move to the next interactive element on the page.
+No file chosen
+Attach files by dragging & dropping, selecting or pasting them.
+Editing Sisop-4-2025-IT31/README.md at main · knownasrayy/Sisop-4-2025-IT31
+
+Translate
+
         stbuf->st_mode = S_IFDIR | 0755;
         stbuf->st_nlink = 2;
         stbuf->st_uid = getuid();
@@ -1105,7 +1112,7 @@ txt.nucmik  <- nama dibalik karena mengandung "kimcun"
 
 ### Isi Log `/logs/antink.log`
 ```
-[WARNING] Detected dangerous file: data_nafis.docx
-[WARNING] Detected dangerous file: kimcun_laporan.txt
-[ACCESS] /laporan_final.txt
+[WARNING] Detected dangerous file: nafis.csv
+[WARNING] Detected dangerous file: kimcun.txt
+[ACCESS] /test.txt
 ```
