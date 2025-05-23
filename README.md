@@ -710,9 +710,8 @@ static int baymax_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 }
 
 ```
--Fungsi baymax_getattr() menghitung ukuran file utuh dari total fragmen di folder relics.
-
--Fungsi baymax_readdir() menampilkan nama base file dari fragmen agar user lihat file utuh.
+- Fungsi baymax_getattr() menghitung ukuran file utuh dari total fragmen di folder relics.
+- Fungsi baymax_readdir() menampilkan nama base file dari fragmen agar user lihat file utuh.
 
 #### B. File di mount point terlihat utuh walau aslinya pecahan
 ```bash
