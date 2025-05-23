@@ -81,3 +81,11 @@ for input_file in anomali/*.txt; do
     echo "Berhasil mengonversi $base_name.txt → $(basename "$output_file")"
 done
 ```
+
+
+# Soal_2
+
+## Deskripsi Soal
+Buatlah sebuah virtual filesystem menggunakan FUSE yang memunculkan file Baymax.jpeg secara utuh dengan cara menggabungkan 14 potongan file berukuran 1 KB yang ada di direktori relics (Baymax.jpeg.000 hingga Baymax.jpeg.013). Sistem harus memungkinkan pembuatan file baru di direktori mount dengan otomatis memecahnya menjadi potongan 1 KB dan menyimpannya di relics. Saat file dihapus dari mount, semua potongan terkait di relics juga dihapus. Semua aktivitas baca, tulis, hapus, dan salin file harus dicatat dalam file activity.log.
+
+
