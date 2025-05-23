@@ -828,8 +828,8 @@ static int baymax_write(const char *path, const char *buf, size_t size,
 }
 
 ```
-- baymax_create() dan baymax_open() siapkan context dan hapus fragmen lama.
-- baymax_write() tulis data pecahan 1024 byte ke fragmen di folder relics.
+- Baymax_create() dan baymax_open() siapkan context dan hapus fragmen lama.
+- Baymax_write() tulis data pecahan 1024 byte ke fragmen di folder relics.
 
 #### D. Menghapus file di mount point juga menghapus semua fragmen di relics
 ```bash
@@ -885,7 +885,7 @@ static int baymax_unlink(const char *path) {
 }
 
 ```
-- baymax_unlink() hapus semua file fragmen berurutan dari folder relics dengan nama [filename].000, [filename].001, dst.
+- Baymax_unlink() hapus semua file fragmen berurutan dari folder relics dengan nama [filename].000, [filename].001, dst.
 
 
 
