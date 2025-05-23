@@ -173,6 +173,7 @@ file image/1_image_2025-05-22_10-40-27.png
 cat conversion.log
 ```
 3. Hasil pengubahan file `.txt.` ke `image`
+
 ![image](https://github.com/user-attachments/assets/4b53fdf7-786c-4455-b7e4-69a28047d973)
 
 
