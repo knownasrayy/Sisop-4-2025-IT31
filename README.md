@@ -91,7 +91,8 @@ Buatlah sebuah virtual filesystem menggunakan FUSE yang memunculkan file Baymax.
 ---
 
 ###
-bash```
+bash 
+```
 #define FUSE_USE_VERSION 29
 #include <fuse.h>
 #include <stdio.h>
@@ -512,7 +513,6 @@ static int baymax_release(const char *path, struct fuse_file_info *fi) {
     }
     return 0;
 }
-
 static int baymax_unlink(const char *path) {
     const char *base_filename = path + 1;
     int fragments_unlinked_count = 0;
