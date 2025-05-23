@@ -950,3 +950,162 @@ static void log_event(const char *event_type, const char *details) {
 ```
 - log_event() menulis log event dengan timestamp ke file activity.log.
 Di fungsi seperti baymax_open(), baymax_release(), dan baymax_unlink() dipanggil log_event() sesuai event.
+
+
+
+
+
+# Soal 3 - AntiNK (Anti Napis Kimcun)
+
+## Deskripsi
+
+AntiNK adalah sistem berbasis FUSE yang digunakan untuk **mendeteksi file berbahaya** berdasarkan **nama file**, serta melakukan **transformasi nama file** dan **enkripsi isi file** sesuai kondisi tertentu. Sistem ini juga mencatat semua aktivitas yang terjadi di filesystem ke dalam log.
+
+Filesystem ini akan berjalan di dalam container menggunakan Docker, dan mengakses file yang disediakan melalui folder mount host.
+
+---
+
+## Spesifikasi Soal
+
+### A. Deteksi File Berbahaya
+Jika ada file yang namanya mengandung substring **"nafis"** atau **"kimcun"**, maka:
+1. **Nama file tersebut dibalik** saat ditampilkan pada mount folder.
+2. Sistem **mencatat aktivitas ini dalam log** dengan format:
+
+```
+[WARNING] Detected dangerous file: <nama_file_asli>
+```
+
+**Implementasi di `antink.c`:**
+
+- Fungsi pendeteksi nama berbahaya:
+  ```c
+  int is_berbahaya(const char *filename) {
+	return strstr(filename, "nafis") || strstr(filename, "kimcun");
+  }
+  ```
+- Pembalikan nama:
+  ```c
+  void reverse_string(char *str) {
+	int len = strlen(str);
+	for (int i = 0; i < len / 2; ++i) {
+    	char tmp = str[i];
+    	str[i] = str[len - i - 1];
+    	str[len - i - 1] = tmp;
+	}
+  ```
+- Penerapan dalam fungsi readdir:
+  ```c
+  static int antink_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset,
+                      	struct fuse_file_info *fi, enum fuse_readdir_flags flags) {
+	DIR *dp;
+	struct dirent *de;
+	char full_path[1024];
+	snprintf(full_path, sizeof(full_path), "%s%s", source_dir, path);
+
+	dp = opendir(full_path);
+	if (dp == NULL) return -errno;
+
+	while ((de = readdir(dp)) != NULL) {
+    	const char *name = de->d_name;
+
+
+    	if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
+        	continue;
+
+    	char temp_name[1024];
+    	strcpy(temp_name, name);
+  ```
+
+---
+
+### B. Enkripsi ROT13 untuk File Aman `.txt`
+Untuk **file dengan ekstensi `.txt`** yang **tidak dianggap berbahaya**, maka:
+- Saat dibaca, isinya **dienkripsi dengan algoritma ROT13**.
+- Tidak berlaku untuk file yang mengandung `nafis` atau `kimcun`.
+
+**Implementasi di `antink.c`:**
+
+- Fungsi ROT13:
+  ```c
+  void apply_rot13(char *buf, size_t size) {
+	for (size_t i = 0; i < size; i++) {
+    	if ('a' <= buf[i] && buf[i] <= 'z') {
+        	buf[i] = ((buf[i] - 'a' + 13) % 26) + 'a';
+    	} else if ('A' <= buf[i] && buf[i] <= 'Z') {
+        	buf[i] = ((buf[i] - 'A' + 13) % 26) + 'A';
+    	}
+	}
+  ```
+- Penerapan di fungsi `read`:
+  ```c
+  if (strstr(full_path, ".txt") && !is_berbahaya(full_path)) {
+      apply_rot13(buf, res);
+  }
+  ```
+
+---
+
+### C. Logging Akses File
+Setiap file yang diakses (dibuka), akan dicatat ke file log `/logs/antink.log` dengan format:
+
+```
+[ACCESS] /<path_file>
+```
+**Implementasi di `antink.c`:**
+
+- Logging dilakukan dalam:
+  ```c
+  static int antink_open(const char *path, struct fuse_file_info *fi) {
+	char full_path[1024];
+	snprintf(full_path, sizeof(full_path), "%s%s", source_dir, path);
+
+	FILE *log = fopen(log_file, "a");
+	if (log) {
+    	fprintf(log, "[ACCESS] %s\n", path);
+    	fclose(log);
+	}
+
+	int res = open(full_path, fi->flags);
+	if (res == -1) return -errno;
+
+	close(res);
+	return 0;
+  }
+  ```
+
+---
+
+## Integrasi Docker
+
+Filesystem ini dijalankan di container berbasis Ubuntu dengan FUSE. File akan dimount dari host ke dalam container agar bisa dipantau dan dimodifikasi.
+
+### Struktur Docker:
+- `Dockerfile`: Build image dengan dependensi FUSE.
+- `docker-compose.yml`: Mount folder host ke `/source` dan `/logs` di container.
+- Perintah mount: `./antink /home/antink_mount`
+
+---
+
+## Contoh Perilaku
+
+### Struktur File Asli di Host `/source`
+```
+test.txt
+nafis.csv
+kimcun.txt
+```
+
+### Struktur Tampilan di Mount (`/home/antink_mount`)
+```
+test.txt  <- ROT13 saat dibaca
+vsc.sifan   <- nama dibalik karena mengandung "nafis"
+txt.nucmik  <- nama dibalik karena mengandung "kimcun"
+```
+
+### Isi Log `/logs/antink.log`
+```
+[WARNING] Detected dangerous file: data_nafis.docx
+[WARNING] Detected dangerous file: kimcun_laporan.txt
+[ACCESS] /laporan_final.txt
+```
