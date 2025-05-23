@@ -31,7 +31,7 @@ rm anomali.zip
 ```
 
 Struktur Hasil:
-```
+```bash
 anomali/
 ├── 1.txt
 ├── 2.txt
