@@ -16,7 +16,7 @@ Shorekeeper menemukan teks hexadecimal anomali di Tethys' Deep. Dimana kita disu
 
 ---
 
-### **1a: Ekstraksi File Anomali**
+### **1a. Ekstraksi File Anomali**
 **Tujuan**:  
 Mengambil file ZIP dari sumber, mengekstrak ke direktori `anomali`, dan menghapus file ZIP.
 
@@ -43,7 +43,7 @@ anomali/
 └── 7.txt
 ```
 
-### 1b: Konversi Hex ke Gambar
+### 1b. Konversi Hex ke Gambar
 **Tujuan**:
 
 Mengubah string hexadecimal dalam file `.txt` menjadi file gambar.
@@ -98,7 +98,7 @@ fwrite(bin_data, 1, clean_len / 2, output);
 - Data binary langsung ditulis sebagai file PNG/JPEG.
 
 
-### 1c: Penamaan File dengan Timestamp
+### 1c. Penamaan File dengan Timestamp
 **Tujuan**
 Memberi nama file dengan format:
 `[nama_file]_image_[YYYY-mm-dd]_[HH-MM-SS].png`
@@ -107,16 +107,14 @@ Memberi nama file dengan format:
 time_t now = time(NULL);
 struct tm *tm = localtime(&now);
 strftime(file_timestamp, sizeof(file_timestamp), "%Y-%m-%d_%H-%M-%S", tm);
-
-// Format nama file
 snprintf(output_path, sizeof(output_path), "image/%d_image_%s.png", i, file_timestamp);
 ```
 
 **Penjelasan**
 1. Ambil Waktu Sekarang:
 ```bash
-time_t now = time(NULL);  // Ambil waktu UNIX saat ini
-struct tm *tm = localtime(&now);  // Konversi ke waktu lokal
+time_t now = time(NULL); 
+struct tm *tm = localtime(&now); 
 ```
 
 2. Format Timestamp:
@@ -136,7 +134,7 @@ snprintf(output_path, ..., "image/%d_image_%s.png", i, file_timestamp);
 ```
 Contoh hasil: `image/1_image_2025-05-17_22-51-04.png`.
 
-### 1d: Pencatatan Log File
+### 1d. Pencatatan Log File
 **Struktur Log**:
 ```[YYYY-mm-dd][HH:MM:SS]: Successfully converted hexadecimal text [X.txt] to [X_image_...png]```
 
