@@ -8,7 +8,7 @@
 # Soal 1
 
 ## Deskripsi Soal
-Shorekeeper menemukan teks hexadecimal anomali di Tethys' Deep. Tugas:
+Shorekeeper menemukan teks hexadecimal anomali di Tethys' Deep. Dimana kita disuruh untuk:
 1. Ekstraksi file teks
 2. Konversi hex ke gambar
 3. Penamaan file dengan timestamp
@@ -21,11 +21,11 @@ Shorekeeper menemukan teks hexadecimal anomali di Tethys' Deep. Tugas:
 Mengambil file ZIP dari sumber, mengekstrak ke direktori `anomali`, dan menghapus file ZIP.
 
 **Langkah**:
-1. # Salin file ZIP ke direktori kerja
+1. ### Salin file ZIP ke direktori kerja
 ```bash
 cp '/path/anomali.zip' ~/blackshores/
 ```
-2. # Unzip dan hapus file
+2. ### Unzip dan hapus file
 ```bash
 unzip anomali.zip -d anomali
 rm anomali.zip
