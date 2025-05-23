@@ -605,6 +605,113 @@ int main(int argc, char *argv[]) {
 }
 ```
 
+### Penjelasan Kode
+
+#### A. Sistem file virtual FUSE menampilkan file utuh dari fragment di folder relics
+
+```bash
+static int baymax_getattr(const char *path, struct stat *stbuf) {
+    memset(stbuf, 0, sizeof(struct stat));
+    
+    if (strcmp(path, "/") == 0) {
+        stbuf->st_mode = S_IFDIR | 0755;
+        stbuf->st_nlink = 2;
+        stbuf->st_uid = getuid();
+        stbuf->st_gid = getgid();
+        stbuf->st_atime = stbuf->st_mtime = stbuf->st_ctime = time(NULL);
+        return 0;
+    }
+
+    const char *base_filename = path + 1;
+    off_t total_size = 0;
+    int fragment_count = 0;
+    char fragment_path[PATH_MAX];
+    struct stat frag_stat;
+    time_t last_mod_time = 0;
+
+    for (int i = 0; i < MAX_FRAGMENTS; i++) {
+        snprintf(fragment_path, sizeof(fragment_path), "%s/%s.%03d", relics_dir, base_filename, i);
+        if (stat(fragment_path, &frag_stat) == -1) {
+            if (errno == ENOENT) break;
+            return -errno;
+        }
+        total_size += frag_stat.st_size;
+        fragment_count++;
+        if (frag_stat.st_mtime > last_mod_time) last_mod_time = frag_stat.st_mtime;
+    }
+
+    if (fragment_count == 0) return -ENOENT;
+
+    stbuf->st_mode = S_IFREG | 0644;
+    stbuf->st_nlink = 1;
+    stbuf->st_size = total_size;
+    stbuf->st_uid = getuid();
+    stbuf->st_gid = getgid();
+    stbuf->st_atime = stbuf->st_mtime = stbuf->st_ctime = last_mod_time ? last_mod_time : time(NULL);
+    return 0;
+}
+
+static int baymax_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+                         off_t offset, struct fuse_file_info *fi) {
+    (void)offset; (void)fi;
+    if (strcmp(path, "/") != 0) return -ENOENT;
+
+    filler(buf, ".", NULL, 0);
+    filler(buf, "..", NULL, 0);
+
+    DIR *dir_p = opendir(relics_dir);
+    if (!dir_p) return -errno;
+
+    struct dirent *dir_entry;
+    char *added_basenames[MAX_FRAGMENTS] = {0};
+    int basename_count = 0;
+    int ret = 0;
+
+    while ((dir_entry = readdir(dir_p)) != NULL) {
+        if (dir_entry->d_name[0] == '.') continue;
+
+        char *dot_ptr = strrchr(dir_entry->d_name, '.');
+        if (dot_ptr && strlen(dot_ptr) == 4 &&
+            isdigit(dot_ptr[1]) && isdigit(dot_ptr[2]) && isdigit(dot_ptr[3])) {
+
+            size_t base_len = dot_ptr - dir_entry->d_name;
+            if (base_len == 0 || base_len > NAME_MAX) continue;
+
+            char base_name[NAME_MAX + 1];
+            strncpy(base_name, dir_entry->d_name, base_len);
+            base_name[base_len] = '\0';
+
+            int found = 0;
+            for (int j = 0; j < basename_count; j++) {
+                if (strcmp(added_basenames[j], base_name) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+
+            if (!found) {
+                if (basename_count < MAX_FRAGMENTS) {
+                    added_basenames[basename_count] = strdup(base_name);
+                    if (!added_basenames[basename_count]) {
+                        ret = -ENOMEM; break;
+                    }
+                    filler(buf, base_name, NULL, 0);
+                    basename_count++;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    for (int j = 0; j < basename_count; j++) free(added_basenames[j]);
+    closedir(dir_p);
+    return ret;
+}
+
+```
+-Fungsi baymax_getattr() menghitung ukuran file utuh dari total fragmen di folder relics.
+-Fungsi baymax_readdir() menampilkan nama base file dari fragmen agar user lihat file utuh.
 
 
 
