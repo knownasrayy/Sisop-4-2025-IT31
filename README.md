@@ -42,3 +42,42 @@ anomali/
 ├── 6.txt
 └── 7.txt
 ```
+
+### 1b: Konversi Hex ke Gambar
+**Tujuan**
+Mengubah string hexadecimal dalam file `.txt` menjadi file gambar.
+
+Script Awal `(hex_to_image.sh)`:
+```bash
+#!/bin/bash
+INPUT="anomali/1.txt"
+OUTPUT="image/output.png"
+HEXDATA=$(cat $INPUT | tr -d ' \n\r')
+echo $HEXDATA | xxd -r -p > $OUTPUT
+echo "File gambar berhasil dibuat di $OUTPUT"
+```
+
+**Cara Jalankan**
+```bash
+chmod +x hex_to_image.sh
+./hex_to_image.sh
+```
+
+### 1c: Penamaan File dengan Timestamp
+**Tujuan**
+Memberi nama file dengan format:
+`[nama_file]_image_[YYYY-mm-dd]_[HH-MM-SS].png`
+
+Script (`hex_to_image_timestamp.sh`):
+```bash
+#!/bin/bash
+mkdir -p image
+for input_file in anomali/*.txt; do
+    base_name=$(basename "$input_file" .txt)
+    timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+    output_file="image/${base_name}_image_${timestamp}.png"
+    hex_data=$(cat "$input_file" | tr -d ' \n\r')
+    echo "$hex_data" | xxd -r -p > "$output_file"
+    echo "Berhasil mengonversi $base_name.txt → $(basename "$output_file")"
+done
+```
