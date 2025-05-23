@@ -12,7 +12,7 @@ Shorekeeper menemukan teks hexadecimal anomali di Tethys' Deep. Tugas:
 1. Ekstraksi file teks
 2. Konversi hex ke gambar
 3. Penamaan file dengan timestamp
-4. Pencatatan log aktivitas
+4. Pencatatan log aktivitas.
 
 ---
 
