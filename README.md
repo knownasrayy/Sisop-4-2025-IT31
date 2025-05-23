@@ -102,19 +102,81 @@ fwrite(bin_data, 1, clean_len / 2, output);
 Memberi nama file dengan format:
 `[nama_file]_image_[YYYY-mm-dd]_[HH-MM-SS].png`
 
-Script (`hex_to_image_timestamp.sh`):
 ```bash
-#!/bin/bash
-mkdir -p image
-for input_file in anomali/*.txt; do
-    base_name=$(basename "$input_file" .txt)
-    timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
-    output_file="image/${base_name}_image_${timestamp}.png"
-    hex_data=$(cat "$input_file" | tr -d ' \n\r')
-    echo "$hex_data" | xxd -r -p > "$output_file"
-    echo "Berhasil mengonversi $base_name.txt → $(basename "$output_file")"
-done
+time_t now = time(NULL);
+struct tm *tm = localtime(&now);
+strftime(file_timestamp, sizeof(file_timestamp), "%Y-%m-%d_%H-%M-%S", tm);
+
+// Format nama file
+snprintf(output_path, sizeof(output_path), "image/%d_image_%s.png", i, file_timestamp);
 ```
+
+**Penjelasan**
+1. Ambil Waktu Sekarang:
+```bash
+time_t now = time(NULL);  // Ambil waktu UNIX saat ini
+struct tm *tm = localtime(&now);  // Konversi ke waktu lokal
+```
+
+2. Format Timestamp:
+
+- `%Y`: Tahun 4 digit (contoh: `2025`)
+- `%m`: Bulan 2 digit (contoh: `05` untuk Mei)
+- `%d`: Tanggal 2 digit (contoh: `17`)
+- `%H`: Jam 24 jam (contoh: `22`)
+- `%M`: Menit (contoh: `51`)
+- `%S`: Detik (contoh: `04`)
+
+Format akhir: `2025-05-17_22-51-04`. 
+
+3. Pembuatan Nama File:
+```bash
+snprintf(output_path, ..., "image/%d_image_%s.png", i, file_timestamp);
+```
+Contoh hasil: `image/1_image_2025-05-17_22-51-04.png`.
+
+### 1d: Pencatatan Log File
+**Struktur Log**:
+```[YYYY-mm-dd][HH:MM:SS]: Successfully converted hexadecimal text [X.txt] to [X_image_...png]```
+
+Contoh:
+```[2025-05-17][22:51:04]: Successfully converted hexadecimal text 1.txt to 1_image_2025-05-17_22-51-04.png```
+
+### Cara Menjalankan:
+1. Kompilasi:
+```bash
+gcc hexed.c -o hexec && chmod +x hexec
+```
+
+2. Eksekusi:
+```bash
+./hexec
+```
+
+3. Hasil:
+```
+Berhasil mengonversi anomali/1.txt → image/1_image_2025-05-22_10-40-27.png
+Berhasil mengonversi anomali/2.txt → image/2_image_2025-05-22_10-40-27.png
+Berhasil mengonversi anomali/3.txt → image/3_image_2025-05-22_10-40-27.png
+Berhasil mengonversi anomali/4.txt → image/4_image_2025-05-22_10-40-27.png
+Berhasil mengonversi anomali/5.txt → image/5_image_2025-05-22_10-40-27.png
+Berhasil mengonversi anomali/6.txt → image/6_image_2025-05-22_10-40-27.png
+Berhasil mengonversi anomali/7.txt → image/7_image_2025-05-22_10-40-27.png
+```
+### Validasi
+1. Cek gambar
+```bash                                                                                                                 
+┌──(farhanbaig㉿farhan)-[~/blackshores]
+└─$ file image/1_image_2025-05-22_10-40-27.png
+```
+
+2. Cek log
+```bash
+cat conversion.log
+```
+3. Hasil pengubahan file `.txt.` ke `image`
+![image](https://github.com/user-attachments/assets/4b53fdf7-786c-4455-b7e4-69a28047d973)
+
 
 
 # Soal_2
